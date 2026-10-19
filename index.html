@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Юнит-Клининг — калькулятор стоимости уборки</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          boxShadow: {
+            soft: '0 4px 30px -8px rgba(16, 24, 40, 0.12)',
+            card: '0 8px 40px -12px rgba(16, 24, 40, 0.14)',
+          },
+          colors: {
+            emerald: { 50:'#ecfdf5',100:'#d1fae5',200:'#a7f3d0',300:'#6ee7b7',400:'#34d399',500:'#10b981',600:'#059669',700:'#047857' },
+          },
+        }
+      }
+    }
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+    body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+    /* Range slider */
+    input[type="range"] { -webkit-appearance:none; appearance:none; width:100%; height:8px; border-radius:9999px;
+      background: linear-gradient(90deg, #10b981 var(--fill,50%), #e5e7eb var(--fill,50%)); outline:none; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:26px; height:26px; border-radius:50%;
+      background:#fff; border:3px solid #059669; box-shadow:0 2px 8px rgba(5,150,105,.35); cursor:pointer; transition:transform .15s ease; }
+    input[type="range"]::-webkit-slider-thumb:hover, input[type="range"]::-webkit-slider-thumb:active { transform:scale(1.12); }
+    input[type="range"]::-moz-range-thumb { width:26px; height:26px; border-radius:50%; background:#fff; border:3px solid #059669;
+      box-shadow:0 2px 8px rgba(15,43,35,.3); cursor:pointer; }
+    input[type="range"]::-moz-range-track { height:8px; border-radius:9999px; background:#e5e7eb; }
+
+    .fade-zoom { animation: fadeZoom .35s ease both; }
+    @keyframes fadeZoom { from{opacity:0; transform:translateY(8px) scale(.98);} to{opacity:1; transform:none;} }
+
+    .fade-in { animation: fadeIn .25s ease both; }
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+    .pulse-glow { transition: box-shadow .3s ease, transform .3s ease; }
+    .pulse-glow.bump { animation: bump .35s ease; }
+    @keyframes bump { 0%{box-shadow:0 0 0 0 rgba(16,185,129,.5);} 100%{box-shadow:0 0 0 18px rgba(16,185,129,0);} }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
+
+  <!-- Header -->
+  <header class="border-b border-gray-100 bg-white/70 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shadow-soft">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l3-3M7 21l-3-3M11 21l-5-5M19 5l-4 4-2-2 4-4z"/><path d="M12 6l2-2 4 4-2 2a3 3 0 0 1-4-4z"/><path d="M13 13l-6 6"/></svg>
+        </div>
+        <span class="font-bold text-lg tracking-tight">Юнит-<span class="text-emerald-600">Клининг</span></span>
+      </div>
+      <a href="#calculator" class="text-sm font-medium text-emerald-600 hover:text-emerald-700 px-4 py-2 rounded-lg hover:bg-emerald-50 transition-colors">Рассчитать стоимость</a>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="max-w-6xl mx-auto px-5 pt-10 pb-4 text-center lg:text-left">
+    <p class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">
+      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Онлайн-калькулятор
+    </p>
+    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-gray-900 mt-4 leading-tight">
+      Рассчитайте стоимость<br class="hidden sm:block" /> уборки за 30 секунд
+    </h1>
+    <p class="text-gray-500 mt-4 max-w-xl text-base sm:text-lg mx-auto lg:mx-0">
+      Прозрачные цены без скрытых доплат. Двигайте ползунок, добавляйте услуги — итог пересчитается мгновенно.
+    </p>
+  </section>
+
+  <!-- Calculator -->
+  <main id="calculator" class="max-w-6xl mx-auto px-5 pb-20 grid lg:grid-cols-[1fr_380px] gap-6 lg:gap-8 items-start">
+
+    <!-- Left: inputs -->
+    <section class="grid gap-6">
+
+      <!-- Area card -->
+      <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-gray-100">
+        <div class="flex items-start justify-between gap-4 mb-6">
+          <div>
+            <h2 class="text-lg font-bold text-gray-900">Площадь помещения</h2>
+            <p class="text-sm text-gray-500 mt-1">100 ₽ за м². Точную площадь можно указать при заказе.</p>
+          </div>
+          <div class="text-right shrink-0">
+            <span id="areaValue" class="text-3xl font-extrabold text-gray-900 tabular-nums">60</span>
+            <span class="text-sm font-medium text-gray-400"> м²</span>
+          </div>
+        </div>
+        <input type="range" id="area" min="20" max="200" value="60" step="1" aria-label="Площадь помещения" />
+        <div class="flex justify-between text-xs text-gray-400 mt-3 font-medium">
+          <span>20 м²</span><span>200 м²</span>
+        </div>
+      </div>
+
+      <!-- Extras card -->
+      <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-card border border-gray-100">
+        <h2 class="text-lg font-bold text-gray-900 mb-1">Дополнительные услуги</h2>
+        <p class="text-sm text-gray-500 mb-5">Отметьте то, что нужно — стоимость добавится к итогу.</p>
+        <div class="grid gap-3">
+
+          <label class="option group flex items-center gap-4 p-4 rounded-2xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/40 cursor-pointer transition-all duration-200">
+            <input type="checkbox" id="windows" data-type="flat" data-value="3000" class="peer sr-only" />
+            <span class="relative w-6 h-6 rounded-lg border-2 border-gray-300 peer-checked:border-emerald-500 peer-checked:bg-emerald-500 transition-colors flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+            </span>
+            <span class="flex-1">
+              <span class="block font-semibold text-gray-900">Мойка окон</span>
+              <span class="block text-sm text-gray-500">Все окна и подоконники</span>
+            </span>
+            <span class="font-bold text-emerald-600 whitespace-nowrap">+3 000 ₽</span>
+          </label>
+
+          <label class="option group flex items-center gap-4 p-4 rounded-2xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/40 cursor-pointer transition-all duration-200">
+            <input type="checkbox" id="furniture" data-type="flat" data-value="5000" class="peer sr-only" />
+            <span class="relative w-6 h-6 rounded-lg border-2 border-gray-300 peer-checked:border-emerald-500 peer-checked:bg-emerald-500 transition-colors flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+            </span>
+            <span class="flex-1">
+              <span class="block font-semibold text-gray-900">Химчистка мебели</span>
+              <span class="block text-sm text-gray-500">Двухместный диван или кресло</span>
+            </span>
+            <span class="font-bold text-emerald-600 whitespace-nowrap">+5 000 ₽</span>
+          </label>
+
+          <label class="option group flex items-center gap-4 p-4 rounded-2xl border border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/40 cursor-pointer transition-all duration-200">
+            <input type="checkbox" id="general" data-type="multiplier" data-value="1.5" class="peer sr-only" />
+            <span class="relative w-6 h-6 rounded-lg border-2 border-gray-300 peer-checked:border-emerald-500 peer-checked:bg-emerald-500 transition-colors flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-white opacity-0 peer-checked:opacity-100 transition-opacity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+            </span>
+            <span class="flex-1">
+              <span class="block font-semibold text-gray-900">Генеральная уборка</span>
+              <span class="block text-sm text-gray-500">Глубокая уборка всего помещения × 1.5</span>
+            </span>
+            <span class="font-bold text-emerald-600 whitespace-nowrap">× 1.5</span>
+          </label>
+
+        </div>
+      </div>
+
+      <!-- Mobile total -->
+      <div class="lg:hidden bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-3xl p-6 sm:p-8 shadow-card text-white">
+        <p class="text-sm font-medium text-emerald-50 uppercase tracking-wide">Итоговая стоимость</p>
+        <p class="text-4xl font-extrabold tabular-nums mt-2"><span id="mobileTotal">9 000</span>&nbsp;₽</p>
+        <button onclick="openModal()" class="mt-5 w-full py-3.5 rounded-xl bg-white text-emerald-600 font-bold hover:bg-emerald-50 transition-colors shadow-sm">
+          Заказать уборку
+        </button>
+      </div>
+
+    </section>
+
+    <!-- Right: sticky total (desktop) -->
+    <aside class="lg:sticky lg:top-24">
+      <div class="bg-white rounded-3xl p-7 shadow-card border border-gray-100">
+        <div class="flex items-center justify-between">
+          <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Итоговая стоимость</p>
+          <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full" id="breakdownLabel">Базовая + услуги</span>
+        </div>
+
+        <p class="text-5xl font-extrabold tabular-nums mt-4 text-gray-900">
+          <span id="desktopTotal">9 000</span><span class="text-2xl font-bold text-gray-400 ml-1">₽</span>
+        </p>
+
+        <!-- Breakdown -->
+        <div class="mt-6 space-y-2.5 text-sm" id="breakdown">
+          <div class="flex justify-between text-gray-600">
+            <span>Уборка <span id="bdArea">60</span> м²</span>
+            <span class="tabular-nums font-medium" id="bdBase">6 000 ₽</span>
+          </div>
+          <div class="flex justify-between text-gray-600" id="bdWindowsRow" style="display:none">
+            <span>Мойка окон</span>
+            <span class="tabular-nums font-medium">+3 000 ₽</span>
+          </div>
+          <div class="flex justify-between text-gray-600" id="bdFurnitureRow" style="display:none">
+            <span>Химчистка мебели</span>
+            <span class="tabular-nums font-medium">+5 000 ₽</span>
+          </div>
+          <div class="flex justify-between text-gray-600" id="bdGeneralRow" style="display:none">
+            <span>Генеральная уборка</span>
+            <span class="tabular-nums font-medium">× 1.5</span>
+          </div>
+        </div>
+
+        <div class="border-t border-dashed border-gray-200 mt-5 pt-5">
+          <button onclick="openModal()" class="pulse-glow w-full py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-base transition-colors shadow-soft active:scale-[.98]">
+            Заказать уборку
+          </button>
+          <p class="text-center text-xs text-gray-400 mt-3">Бесплатная отмена за 24 часа · Без предоплаты</p>
+        </div>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- Modal -->
+  <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-gray-900/50 backdrop-blur-sm fade-in" onclick="closeModal()"></div>
+    <div class="fade-zoom relative bg-white w-full max-w-md rounded-3xl p-8 shadow-2xl">
+      <button onclick="closeModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors flex items-center justify-center" aria-label="Закрыть">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+
+      <div class="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center mb-5">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l3-3M7 21l-3-3M11 21l-5-5M19 5l-4 4-2-2 4-4zM12 6l2-2 4 4-2 2a3 3 0 0 1-4-4z"/></svg>
+      </div>
+
+      <h3 class="text-2xl font-extrabold text-gray-900">Заказать уборку</h3>
+      <p class="text-gray-500 mt-1 text-sm">Оставьте контакты — перезвоним и уточним детали.</p>
+
+      <form id="orderForm" class="mt-6 space-y-4" onsubmit="submitForm(event)">
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-700 mb-1.5">Имя</label>
+          <input id="name" type="text" required placeholder="Как к вам обращаться"
+            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all" />
+        </div>
+        <div>
+          <label for="phone" class="block text-sm font-medium text-gray-700 mb-1.5">Телефон</label>
+          <input id="phone" type="tel" required placeholder="+7 (___) ___-__-__"
+            class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 focus:bg-white transition-all" />
+        </div>
+        <div class="rounded-2xl bg-emerald-50 p-4 flex items-center justify-between">
+          <span class="text-sm text-gray-600">Итого к оплате</span>
+          <span class="text-lg font-extrabold text-emerald-700 tabular-nums"><span id="modalTotal">9 000</span> ₽</span>
+        </div>
+        <button type="submit" class="w-full py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-base transition-colors shadow-soft active:scale-[.98]">
+          Отправить заявку
+        </button>
+        <p class="text-center text-xs text-gray-400">Нажимая кнопку, вы соглашаетесь с обработкой персональных данных</p>
+      </form>
+
+      <!-- Success state -->
+      <div id="success" class="hidden text-center py-6">
+        <div class="w-16 h-16 mx-auto rounded-full bg-emerald-100 flex items-center justify-center">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <h3 class="text-xl font-extrabold text-gray-900 mt-5">Заявка отправлена!</h3>
+        <p class="text-gray-500 mt-2 text-sm">Мы свяжемся с вами в ближайшее время.</p>
+        <button onclick="closeModal()" class="mt-6 px-8 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold transition-colors">Отлично</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const area = document.getElementById('area');
+    const areaValue = document.getElementById('areaValue');
+
+    // Slider gradient fill + value
+    function updateSliderFill() {
+      const min = +area.min, max = +area.max, v = +area.value;
+      const pct = ((v - min) / (max - min)) * 100;
+      area.style.setProperty('--fill', pct + '%');
+      areaValue.textContent = v;
+    }
+    area.addEventListener('input', updateSliderFill);
+    updateSliderFill();
+
+    // Number formatting
+    function fmt(n) { return Math.round(n).toLocaleString('ru-RU'); }
+
+    // Animated counter — time-based loop (setTimeout), not rAF:
+    // rAF is paused in background tabs / headless environments, and the
+    // number would freeze mid-flight. performance.now() keeps it exact.
+    let currentVal = 9000, animateTimer = null;
+    function animateTo(target) {
+      clearTimeout(animateTimer);
+      const start = currentVal, diff = target - start, dur = 350, t0 = performance.now();
+      function step() {
+        const p = Math.min((performance.now() - t0) / dur, 1);
+        const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
+        const val = Math.round(start + diff * eased);
+        desktopTotal.textContent = fmt(val);
+        mobileTotal.textContent = fmt(val);
+        modalTotal.textContent = fmt(val);
+        if (p < 1) animateTimer = setTimeout(step, 16); else currentVal = target;
+      }
+      step();
+    }
+
+    // Compute total
+    const desktopTotal = document.getElementById('desktopTotal');
+    const mobileTotal = document.getElementById('mobileTotal');
+    const modalTotal = document.getElementById('modalTotal');
+    const card = document.querySelector('aside .bg-white');
+
+    function compute() {
+      const base = +area.value * 100;
+      let subtotal = base;
+      let checked = 0;
+      if (windows.checked) { subtotal += +windows.dataset.value; checked++; }
+      if (furniture.checked) { subtotal += +furniture.dataset.value; checked++; }
+      if (general.checked) { subtotal *= +general.dataset.value; checked++; }
+
+      animateTo(subtotal);
+
+      // Breakdown rows
+      bdArea.textContent = area.value;
+      bdBase.textContent = fmt(base) + ' ₽';
+      bdWindowsRow.style.display = windows.checked ? '' : 'none';
+      bdFurnitureRow.style.display = furniture.checked ? '' : 'none';
+      bdGeneralRow.style.display = general.checked ? '' : 'none';
+
+      // Label + glow
+      breakdownLabel.textContent = general.checked ? 'Генеральная × 1.5'
+        : (checked > 0 ? checked + ' услуг(и) добавлено' : 'Базовая уборка');
+      card.classList.remove('bump'); void card.offsetWidth; card.classList.add('bump');
+    }
+
+    ['windows','furniture','general'].forEach(id => document.getElementById(id).addEventListener('change', compute));
+    area.addEventListener('input', compute);
+    compute();
+
+    // Modal
+    const modal = document.getElementById('modal');
+    function openModal() {
+      modal.classList.remove('hidden'); modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => document.getElementById('name').focus(), 60);
+    }
+    function closeModal() {
+      modal.classList.add('hidden'); modal.classList.remove('flex');
+      document.body.style.overflow = '';
+      setTimeout(() => { success.classList.add('hidden'); orderForm.classList.remove('hidden'); orderForm.reset(); }, 200);
+    }
+    modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    // Form submit
+    const orderForm = document.getElementById('orderForm');
+    const success = document.getElementById('success');
+    const ruPhone = /^\+?[0-9\s\-()]{10,18}$/;
+
+    function submitForm(e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      if (!name || !phone) return;
+      if (!ruPhone.test(phone.replace(/\s+/g, ''))) {
+        alert('Пожалуйста, введите корректный номер телефона');
+        return;
+      }
+      orderForm.classList.add('hidden');
+      success.classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>
